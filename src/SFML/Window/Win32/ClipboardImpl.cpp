@@ -26,6 +26,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Win32/ClipboardImpl.hpp>
+#include <SFML/Window/Win32/Utils.hpp>
 
 #include <SFML/System/Err.hpp>
 #include <SFML/System/String.hpp>
@@ -35,26 +36,6 @@
 
 #include <cstring>
 
-namespace
-{
-std::string getErrorString(DWORD error)
-{
-    PTCHAR buffer = nullptr;
-
-    if (FormatMessage(FORMAT_MESSAGE_MAX_WIDTH_MASK | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                        nullptr,
-                        error,
-                        0,
-                        reinterpret_cast<PTCHAR>(&buffer),
-                        0,
-                        nullptr) == 0)
-        return "Unknown error.";
-
-    sf::String message = buffer;
-    LocalFree(buffer);
-    return message.toAnsiString();
-}
-}
 
 namespace sf::priv
 {
@@ -65,13 +46,14 @@ String ClipboardImpl::getString()
 
     if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
     {
-        err() << "Failed to get the clipboard data in Unicode format: " << getErrorString(GetLastError()) << std::endl;
+        err() << "Failed to get the clipboard data in Unicode format: " << priv::getErrorString(GetLastError())
+              << std::endl;
         return text;
     }
 
     if (!OpenClipboard(nullptr))
     {
-        err() << "Failed to open the Win32 clipboard: " << getErrorString(GetLastError()) << std::endl;
+        err() << "Failed to open the Win32 clipboard: " << priv::getErrorString(GetLastError()) << std::endl;
         return text;
     }
 
@@ -79,7 +61,7 @@ String ClipboardImpl::getString()
 
     if (!clipboardHandle)
     {
-        err() << "Failed to get Win32 handle for clipboard content: " << getErrorString(GetLastError()) << std::endl;
+        err() << "Failed to get Win32 handle for clipboard content: " << priv::getErrorString(GetLastError()) << std::endl;
         CloseClipboard();
         return text;
     }
@@ -97,13 +79,13 @@ void ClipboardImpl::setString(const String& text)
 {
     if (!OpenClipboard(nullptr))
     {
-        err() << "Failed to open the Win32 clipboard: " << getErrorString(GetLastError()) << std::endl;
+        err() << "Failed to open the Win32 clipboard: " << priv::getErrorString(GetLastError()) << std::endl;
         return;
     }
 
     if (!EmptyClipboard())
     {
-        err() << "Failed to empty the Win32 clipboard: " << getErrorString(GetLastError()) << std::endl;
+        err() << "Failed to empty the Win32 clipboard: " << priv::getErrorString(GetLastError()) << std::endl;
         CloseClipboard();
         return;
     }
