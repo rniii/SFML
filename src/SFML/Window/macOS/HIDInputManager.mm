@@ -790,7 +790,7 @@ void HIDInputManager::loadKey(IOHIDElementRef key)
     if (code != Keyboard::Scan::Unknown)
     {
         CFRetain(key);
-        m_keys[code].push_back(key);
+        m_keys[code].emplace_back(key);
     }
 }
 
@@ -914,12 +914,7 @@ void HIDInputManager::freeUp()
     m_manager.reset();
 
     for (auto& key : m_keys)
-    {
-        for (IOHIDElementRef iohidElementRef : key)
-            CFRelease(iohidElementRef);
-
         key.clear();
-    }
 }
 
 
@@ -951,13 +946,12 @@ bool HIDInputManager::isPressed(IOHIDElements& elements) const
     {
         IOHIDValueRef value = nil;
 
-        IOHIDDeviceRef device = IOHIDElementGetDevice(*it);
-        IOHIDDeviceGetValue(device, *it, &value);
+        IOHIDDeviceRef device = IOHIDElementGetDevice(it->get());
+        IOHIDDeviceGetValue(device, it->get(), &value);
 
         if (!value)
         {
             // This means some kind of error / disconnection so we remove this element from our database.
-            CFRelease(*it);
             it = elements.erase(it);
         }
         else
